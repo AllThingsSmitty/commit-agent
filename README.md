@@ -46,18 +46,18 @@ commit-agent
 The agent scans your changes, calls Claude to plan the commits, and presents each one for review:
 
 ```
-╭─────────────────────────────────────────────────────╮
+╭──────────────────────────────────────────────────────╮
 │ Commit Agent  |  branch: main  |  2 proposed commits │
-╰─────────────────────────────────────────────────────╯
+╰──────────────────────────────────────────────────────╯
 
 ┌ Commit 1/2  feat(auth): add JWT login endpoint ──────┐
-│                                                       │
-│ Files:                                                │
-│   src/auth/login.py                                   │
-│     Adds POST /login that issues signed JWT tokens    │
-│   tests/test_login.py                                 │
-│     Unit tests covering success and invalid-creds     │
-└───────────────────────────────────────────────────────┘
+│                                                      │
+│ Files:                                               │
+│   src/auth/login.py                                  │
+│     Adds POST /login that issues signed JWT tokens   │
+│   tests/test_login.py                                │
+│     Unit tests covering success and invalid-creds    │
+└──────────────────────────────────────────────────────┘
   [a]pprove  [e]dit  [s]kip  [q]uit
 ```
 
@@ -88,12 +88,12 @@ commit-agent --config /path/to/config.yaml
 
 ## Approval flow controls
 
-| Key | Action |
-|-----|--------|
-| `a` | Approve the commit as-is |
-| `e` | Edit the commit message, then approve |
+| Key | Action                                      |
+| --- | ------------------------------------------- |
+| `a` | Approve the commit as-is                    |
+| `e` | Edit the commit message, then approve       |
 | `s` | Skip this commit (files remain uncommitted) |
-| `q` | Quit — no further commits are processed |
+| `q` | Quit — no further commits are processed     |
 
 ## Configuration
 
@@ -108,7 +108,7 @@ git:
   protected_branches:
     - main
     - master
-  auto_push: false   # set true to be prompted to push after every run
+  auto_push: false # set true to be prompted to push after every run
 
 commit:
   conventional: true
@@ -118,6 +118,7 @@ ui:
 ```
 
 Config file search order:
+
 1. `--config` flag
 2. `./config.yaml`
 3. `./.commit-agent.yaml`
@@ -126,9 +127,9 @@ Config file search order:
 
 ## Environment variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | Your Anthropic API key — get one at console.anthropic.com |
+| Variable            | Required | Description                                               |
+| ------------------- | -------- | --------------------------------------------------------- |
+| `ANTHROPIC_API_KEY` | Yes      | Your Anthropic API key — get one at console.anthropic.com |
 
 ## Running tests
 
