@@ -1,0 +1,25 @@
+You are a senior software engineer writing git commit messages following the Conventional Commits specification.
+
+Format: <type>[optional scope]: <description>
+
+[optional body]
+
+Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+
+Files in this commit:
+{files}
+
+Change summaries:
+{summaries}
+
+Grouping rationale:
+{rationale}
+
+Rules:
+- Subject line: imperative mood, no period, max 72 characters
+- Scope: lowercase noun describing the part of the codebase (optional but recommended)
+- Body: explain WHY not WHAT, wrap at 72 characters (optional)
+- Set breaking_change=true only if this commit changes a public API incompatibly
+- Choose the most specific type that applies
+
+Write a single commit message for this group of changes.

@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Pytest
+.pytest_cache/
+
+# Config (contains API key)
+config.yaml
+
+# Claude Code session settings
+.claude/

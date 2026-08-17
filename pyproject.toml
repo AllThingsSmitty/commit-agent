@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "commit-agent"
+version = "0.1.0"
+description = "Autonomous AI-powered git commit agent using Claude"
+requires-python = ">=3.9"
+dependencies = [
+    "anthropic>=0.55.0",
+    "gitpython>=3.1.40",
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "pydantic>=2.6.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.scripts]
+commit-agent = "commit_agent.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["commit_agent"]
