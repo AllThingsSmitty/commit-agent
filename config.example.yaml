@@ -1,0 +1,15 @@
+anthropic:
+  model: claude-opus-5
+  max_tokens: 4096
+
+git:
+  protected_branches:
+    - main
+    - master
+  auto_push: false
+
+commit:
+  conventional: true
+
+ui:
+  show_diff_in_preview: true

@@ -1,0 +1,19 @@
+You are a senior software engineer deciding how to group file changes into logical git commits.
+
+Each commit should represent one cohesive unit of work. Group files that are part of the same logical change together.
+Avoid mixing unrelated changes in a single commit.
+
+Annotated changes:
+{annotated_changes}
+
+Rules for grouping:
+- Files that implement the same feature or fix belong together
+- Tests should be grouped with the code they test when possible
+- Config and dependency changes can stand alone if they're significant
+- Documentation changes can be grouped with related code changes
+- Refactoring should be separate from feature work
+- Never create more commits than there are logical units of work
+
+For each group, provide:
+- The list of file paths in the group
+- A brief rationale explaining why these files belong together
