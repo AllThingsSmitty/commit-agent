@@ -40,7 +40,7 @@ class GitService:
             head_commit = None
 
         if head_commit is not None:
-            staged_diffs = head_commit.diff("HEAD", staged=True) if staged_only else head_commit.diff(None, staged=True)
+            staged_diffs = head_commit.diff(None, staged=True)
         else:
             staged_diffs = self.repo.index.diff(None)
 
@@ -86,14 +86,40 @@ class GitService:
 
         return changes
 
-    def commit_group(self, group: CommitGroup, custom_message: Optional[str] = None) -> str:
-        message = custom_message if custom_message else group.format_message()
+    def commit_group(self, group: CommitGroup, custom_message: Optional[str] = None, conventional: bool = True) -> str:
+        message = custom_message if custom_message else group.format_message(conventional=conventional)
 
-        # Stage the specific files for this group
-        self.repo.index.add(group.files)
+        try:
+            head_commit = self.repo.head.commit
+        except ValueError:
+            head_commit = None
 
-        # Commit only those files
+        # Determine which files are currently staged
+        if head_commit is not None:
+            currently_staged = {d.b_path or d.a_path for d in head_commit.diff(None, staged=True)}
+        else:
+            currently_staged = set()
+
+        group_files = set(group.files)
+
+        # Only add files not already staged — avoids committing unstaged hunks for
+        # files with partial staging (some hunks staged, others not).
+        unstaged_in_group = [f for f in group.files if f not in currently_staged]
+        if unstaged_in_group:
+            self.repo.index.add(unstaged_in_group)
+
+        # Temporarily unstage files that belong to other groups so this commit
+        # doesn't include them.
+        other_staged = [f for f in currently_staged if f not in group_files]
+        if other_staged and head_commit is not None:
+            self.repo.index.reset(head_commit, paths=other_staged)
+
         commit = self.repo.index.commit(message)
+
+        # Restore the temporarily unstaged files for subsequent groups.
+        if other_staged:
+            self.repo.index.add(other_staged)
+
         return commit.hexsha
 
     def push(self, remote: str = "origin") -> None:
