@@ -53,13 +53,16 @@ class CommitGroup(BaseModel):
     body: Optional[str] = None
     breaking_change: bool = False
 
-    def format_message(self) -> str:
-        header = self.commit_type.value
-        if self.scope:
-            header += f"({self.scope})"
-        if self.breaking_change:
-            header += "!"
-        header += f": {self.subject}"
+    def format_message(self, conventional: bool = True) -> str:
+        if conventional:
+            header = self.commit_type.value
+            if self.scope:
+                header += f"({self.scope})"
+            if self.breaking_change:
+                header += "!"
+            header += f": {self.subject}"
+        else:
+            header = self.subject
 
         if self.body:
             return f"{header}\n\n{self.body}"
@@ -77,10 +80,10 @@ class ApprovedCommit(BaseModel):
     approved: bool
     custom_message: Optional[str] = None
 
-    def get_message(self) -> str:
+    def get_message(self, conventional: bool = True) -> str:
         if self.custom_message:
             return self.custom_message
-        return self.group.format_message()
+        return self.group.format_message(conventional=conventional)
 
 
 class CommitResult(BaseModel):

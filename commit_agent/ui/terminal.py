@@ -75,11 +75,12 @@ def approval_flow(
     show_diff: bool = True,
 ) -> list[ApprovedCommit]:
     summary_map = {ac.file.path: ac.summary for ac in annotated_changes}
+    diff_map = {ac.file.path: ac.file.diff for ac in annotated_changes}
     approved: list[ApprovedCommit] = []
 
     for idx, group in enumerate(groups, start=1):
         console.print()
-        _show_commit_card(idx, len(groups), group, summary_map, show_diff)
+        _show_commit_card(idx, len(groups), group, summary_map, diff_map if show_diff else {})
 
         while True:
             choice = Prompt.ask(
@@ -155,12 +156,9 @@ def _show_commit_card(
     total: int,
     group: CommitGroup,
     summary_map: dict[str, str],
-    show_diff: bool,
+    diff_map: dict[str, str],
 ) -> None:
     type_color = _COMMIT_TYPE_COLORS.get(group.commit_type.value, "white")
-    type_badge = f"[{type_color}][bold]{group.commit_type.value}[/bold][/{type_color}]"
-    scope_text = f"([cyan]{group.scope}[/cyan])" if group.scope else ""
-    breaking = " [red bold]BREAKING[/red bold]" if group.breaking_change else ""
 
     header = Text()
     header.append(f"Commit {idx}/{total}  ", style="dim")
@@ -193,6 +191,19 @@ def _show_commit_card(
         )
     )
 
+    if diff_map:
+        for f in group.files:
+            diff = diff_map.get(f, "")
+            if diff and diff not in ("[binary file]", "[unreadable]", "[error reading diff]"):
+                console.print(
+                    Panel(
+                        Syntax(diff, "diff", theme="monokai", line_numbers=False),
+                        title=f"[dim]{f}[/dim]",
+                        border_style="dim",
+                        box=box.SIMPLE,
+                    )
+                )
+
 
 def _edit_message(group: CommitGroup) -> str:
     current = group.format_message()
@@ -201,10 +212,7 @@ def _edit_message(group: CommitGroup) -> str:
 
     lines = []
     while True:
-        try:
-            line = input()
-        except EOFError:
-            break
+        line = Prompt.ask("", default="", show_default=False, console=console)
         if not line and lines:
             break
         lines.append(line)
