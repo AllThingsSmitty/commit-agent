@@ -55,3 +55,28 @@ def test_format_message_full():
         "refactor(core): extract validation logic\n\n"
         "Moved validation into a dedicated module for reuse."
     )
+
+
+def test_format_message_non_conventional_subject_only():
+    group = _make_group(subject="plain commit message")
+    assert group.format_message(conventional=False) == "plain commit message"
+
+
+def test_format_message_non_conventional_with_body():
+    group = _make_group(subject="plain message", body="Some extra detail.")
+    assert group.format_message(conventional=False) == "plain message\n\nSome extra detail."
+
+
+def test_format_message_non_conventional_ignores_type_and_scope():
+    group = _make_group(commit_type=CommitType.fix, scope="api", subject="fix the thing")
+    msg = group.format_message(conventional=False)
+    assert msg == "fix the thing"
+    assert "fix(" not in msg
+    assert "api" not in msg
+
+
+def test_format_message_non_conventional_ignores_breaking_change_marker():
+    group = _make_group(subject="remove old api", breaking_change=True)
+    msg = group.format_message(conventional=False)
+    assert "!" not in msg
+    assert msg == "remove old api"
