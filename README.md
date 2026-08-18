@@ -84,6 +84,12 @@ commit-agent --repo /path/to/repo
 
 # Use a custom config file
 commit-agent --config /path/to/config.yaml
+
+# Override the Claude model for this run
+commit-agent --model claude-sonnet-5
+
+# Override the max tokens per LLM response for this run
+commit-agent --max-tokens 2048
 ```
 
 ## Approval flow controls
@@ -111,7 +117,7 @@ git:
   auto_push: false # set true to be prompted to push after every run
 
 commit:
-  conventional: true
+  conventional: true  # set false to use plain subject lines instead of type(scope): subject
 
 ui:
   show_diff_in_preview: true
