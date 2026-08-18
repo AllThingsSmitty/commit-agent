@@ -38,10 +38,16 @@ def run(
     push: Optional[bool] = typer.Option(
         None, "--push/--no-push", help="Push after committing (overrides config)"
     ),
+    model: Optional[str] = typer.Option(
+        None, "--model", "-m", help="Claude model to use (overrides config)"
+    ),
+    max_tokens: Optional[int] = typer.Option(
+        None, "--max-tokens", help="Max tokens per LLM response (overrides config)"
+    ),
 ) -> None:
     """Analyze git changes and create logical commits with AI-generated messages."""
     try:
-        _run(repo_path, config_path, staged_only, dry_run, push)
+        _run(repo_path, config_path, staged_only, dry_run, push, model, max_tokens)
     except KeyboardInterrupt:
         ui.console.print("\n[dim]Interrupted.[/dim]")
         raise typer.Exit(0)
@@ -56,9 +62,15 @@ def _run(
     staged_only: bool,
     dry_run: bool,
     push_override: Optional[bool],
+    model_override: Optional[str] = None,
+    max_tokens_override: Optional[int] = None,
 ) -> None:
     # Load config
     config = Config.load(config_path)
+    if model_override:
+        config.anthropic.model = model_override
+    if max_tokens_override:
+        config.anthropic.max_tokens = max_tokens_override
 
     # Connect to repo
     try:
@@ -140,11 +152,13 @@ def _run(
             continue
 
         try:
-            commit_hash = git_service.commit_group(approved.group, approved.custom_message)
+            commit_hash = git_service.commit_group(
+                approved.group, approved.custom_message, conventional=config.commit.conventional
+            )
             results.append(
                 CommitResult(
                     hash=commit_hash,
-                    message=approved.get_message(),
+                    message=approved.get_message(conventional=config.commit.conventional),
                     files=approved.group.files,
                     pushed=False,
                 )

@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from pydantic import BaseModel
 from typing import Optional
@@ -32,38 +33,37 @@ class MessageWriter:
             return []
 
         summary_map = {ac.file.path: ac.summary for ac in annotated_changes}
-        groups = []
 
-        for group_plan in plan:
+        def _write_one(idx: int, group_plan: CommitGroupPlan) -> tuple[int, CommitGroup]:
             files_list = "\n".join(f"- {f}" for f in group_plan.files)
             summaries_list = "\n".join(
                 f"- {f}: {summary_map.get(f, 'no summary')}"
                 for f in group_plan.files
             )
-
             prompt = self._prompt_template.format(
                 files=files_list,
                 summaries=summaries_list,
                 rationale=group_plan.rationale,
             )
-
             response = self.llm.complete_structured(prompt, CommitMessageResponse)
-
-            # Normalize commit type; fall back to chore on unknown value
             try:
                 commit_type = CommitType(response.commit_type)
             except ValueError:
                 commit_type = CommitType.chore
-
-            groups.append(
-                CommitGroup(
-                    files=group_plan.files,
-                    commit_type=commit_type,
-                    scope=response.scope,
-                    subject=response.subject,
-                    body=response.body,
-                    breaking_change=response.breaking_change,
-                )
+            return idx, CommitGroup(
+                files=group_plan.files,
+                commit_type=commit_type,
+                scope=response.scope,
+                subject=response.subject,
+                body=response.body,
+                breaking_change=response.breaking_change,
             )
 
-        return groups
+        results: dict[int, CommitGroup] = {}
+        with ThreadPoolExecutor(max_workers=min(len(plan), 8)) as pool:
+            futures = {pool.submit(_write_one, i, gp): i for i, gp in enumerate(plan)}
+            for future in as_completed(futures):
+                idx, group = future.result()
+                results[idx] = group
+
+        return [results[i] for i in range(len(plan))]
