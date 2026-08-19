@@ -6,11 +6,11 @@ Git operations only execute after you explicitly approve each commit.
 
 ## How it works
 
-1. **Diff Analyzer** — reads all changed files and writes a technical summary of each one
-2. **Commit Planner** — groups files into logical commits based on their summaries
-3. **Message Writer** — generates a Conventional Commit message for each group
-4. **Risk Reviewer** — flags potential issues (secrets, breaking changes, large deletions)
-5. **Approval Flow** — shows each proposed commit; you approve, edit, skip, or quit
+1. **Diff Analyzer**: reads all changed files and writes a technical summary of each one
+2. **Commit Planner**: groups files into logical commits based on their summaries
+3. **Message Writer**: generates a Conventional Commit message for each group
+4. **Risk Reviewer**: flags potential issues (secrets, breaking changes, large deletions)
+5. **Approval Flow**: shows each proposed commit; you approve, edit, skip, or quit
 
 ## Requirements
 
@@ -70,7 +70,7 @@ commit-agent
 # Only consider already-staged changes
 commit-agent --staged
 
-# Dry run — show what would be committed without executing
+# Dry run: show what would be committed without executing
 commit-agent --dry-run
 
 # Push after committing (overrides config)
@@ -99,7 +99,7 @@ commit-agent --max-tokens 2048
 | `a` | Approve the commit as-is                    |
 | `e` | Edit the commit message, then approve       |
 | `s` | Skip this commit (files remain uncommitted) |
-| `q` | Quit — no further commits are processed     |
+| `q` | Quit (no further commits are processed)     |
 
 ## Configuration
 
@@ -135,7 +135,7 @@ Config file search order:
 
 | Variable            | Required | Description                                               |
 | ------------------- | -------- | --------------------------------------------------------- |
-| `ANTHROPIC_API_KEY` | Yes      | Your Anthropic API key — get one at console.anthropic.com |
+| `ANTHROPIC_API_KEY` | Yes      | Your Anthropic API key (get one at console.anthropic.com) |
 
 ## Running tests
 
