@@ -4,6 +4,9 @@ import git
 from git import Repo, InvalidGitRepositoryError
 
 from .models import FileChange, FileStatus, CommitGroup
+from .logging_config import get_logger
+
+logger = get_logger("git_service")
 
 DIFF_TRUNCATE_CHARS = 3000
 
@@ -13,7 +16,9 @@ class GitService:
         search_path = str(repo_path) if repo_path else "."
         try:
             self.repo = Repo(search_path, search_parent_directories=True)
-        except InvalidGitRepositoryError:
+            logger.info(f"Initialized repo at {self.repo.working_dir}")
+        except InvalidGitRepositoryError as e:
+            logger.error(f"No git repository found at or above: {search_path}")
             raise RuntimeError(f"No git repository found at or above: {search_path}")
 
     @property
@@ -30,6 +35,7 @@ class GitService:
         return bool(self.repo.index.unmerged_blobs())
 
     def get_changes(self, staged_only: bool = False) -> list[FileChange]:
+        logger.debug(f"Getting changes with staged_only={staged_only}")
         changes: list[FileChange] = []
 
         # Staged changes (index vs HEAD)
@@ -38,6 +44,7 @@ class GitService:
         except ValueError:
             # Empty repo — no commits yet
             head_commit = None
+            logger.debug("Empty repository - no HEAD commit yet")
 
         if head_commit is not None:
             staged_diffs = head_commit.diff(None, staged=True)
@@ -88,6 +95,7 @@ class GitService:
 
     def commit_group(self, group: CommitGroup, custom_message: Optional[str] = None, conventional: bool = True) -> str:
         message = custom_message if custom_message else group.format_message(conventional=conventional)
+        logger.info(f"Committing {len(group.files)} file(s): {message[:60]}...")
 
         try:
             head_commit = self.repo.head.commit
@@ -106,25 +114,39 @@ class GitService:
         # files with partial staging (some hunks staged, others not).
         unstaged_in_group = [f for f in group.files if f not in currently_staged]
         if unstaged_in_group:
+            logger.debug(f"Adding {len(unstaged_in_group)} unstaged file(s) to index")
             self.repo.index.add(unstaged_in_group)
 
         # Temporarily unstage files that belong to other groups so this commit
         # doesn't include them.
         other_staged = [f for f in currently_staged if f not in group_files]
         if other_staged and head_commit is not None:
+            logger.debug(f"Temporarily unstaging {len(other_staged)} file(s) from other groups")
             self.repo.index.reset(head_commit, paths=other_staged)
 
-        commit = self.repo.index.commit(message)
+        try:
+            commit = self.repo.index.commit(message)
+            logger.info(f"Commit created with hash {commit.hexsha}")
+        except Exception as e:
+            logger.error(f"Failed to commit: {e}")
+            raise
 
         # Restore the temporarily unstaged files for subsequent groups.
         if other_staged:
+            logger.debug(f"Restoring {len(other_staged)} staged file(s) for subsequent commits")
             self.repo.index.add(other_staged)
 
         return commit.hexsha
 
     def push(self, remote: str = "origin") -> None:
-        origin = self.repo.remote(remote)
-        origin.push()
+        try:
+            logger.info(f"Pushing to {remote}")
+            origin = self.repo.remote(remote)
+            origin.push()
+            logger.info(f"Successfully pushed to {remote}")
+        except Exception as e:
+            logger.error(f"Failed to push to {remote}: {e}")
+            raise
 
     def _parse_diff(self, diff: git.Diff, is_staged: bool) -> Optional[FileChange]:
         # Determine path (handle renames)
@@ -142,6 +164,7 @@ class GitService:
             status = FileStatus.modified
 
         if not path:
+            logger.debug("Skipping diff with no path")
             return None
 
         is_binary = diff.diff is None or (
@@ -166,9 +189,11 @@ class GitService:
                 try:
                     full_path = Path(self.repo.working_dir) / path
                     size = full_path.stat().st_size if full_path.exists() else 0
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Failed to get file size for {path}: {e}")
                     size = 0
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Error reading diff for {path}: {e}")
                 diff_text = "[error reading diff]"
                 size = 0
 

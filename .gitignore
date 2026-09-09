@@ -15,3 +15,6 @@ config.yaml
 
 # Claude Code session settings
 .claude/
+
+# Logs
+.commit-agent.log
