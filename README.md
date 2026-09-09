@@ -142,3 +142,22 @@ Config file search order:
 ```bash
 pytest
 ```
+
+## Debugging
+
+Commit-agent logs all operations to `~/.commit-agent.log` for troubleshooting. Log includes:
+- LLM API calls, retries, and response validation
+- Git operations (staging, committing, pushing)
+- Agent execution flow (DiffAnalyzer, CommitPlanner, etc.)
+- Config loading and validation
+- User interactions and approvals
+
+### Enable debug output
+
+To see debug logs in the console (in addition to the file):
+
+```bash
+COMMIT_AGENT_DEBUG=1 commit-agent
+```
+
+This is useful for tracing through the execution step-by-step. The log file is always written regardless of this setting.
