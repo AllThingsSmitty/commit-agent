@@ -1,6 +1,7 @@
 from pathlib import Path
 from pydantic import BaseModel
 
+from . import load_prompt_template
 from ..llm_service import LLMService
 from ..models import FileChange, RiskFlag, RiskSeverity
 
@@ -21,7 +22,7 @@ _PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "risk_reviewer.txt"
 class RiskReviewer:
     def __init__(self, llm: LLMService):
         self.llm = llm
-        self._prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
+        self._prompt_template = load_prompt_template(_PROMPT_PATH)
 
     def review(self, changes: list[FileChange]) -> list[RiskFlag]:
         if not changes:

@@ -3,6 +3,7 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing import Optional
 
+from . import load_prompt_template
 from ..llm_service import LLMService
 from ..models import AnnotatedChange, CommitGroup, CommitType
 from .commit_planner import CommitGroupPlan
@@ -22,7 +23,7 @@ _PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "message_writer.txt"
 class MessageWriter:
     def __init__(self, llm: LLMService):
         self.llm = llm
-        self._prompt_template = _PROMPT_PATH.read_text(encoding="utf-8")
+        self._prompt_template = load_prompt_template(_PROMPT_PATH)
 
     def write(
         self,
